@@ -7,6 +7,9 @@ from .tools.delete_document import delete_document
 from .tools.get_corpus_info import get_corpus_info
 from .tools.list_corpora import list_corpora
 from .tools.rag_query import rag_query
+import agentops
+import os
+agentops.init(api_key=os.getenv("AGENTOPS_API_KEY"))
 
 root_agent = Agent(
     name="RagAgent",
