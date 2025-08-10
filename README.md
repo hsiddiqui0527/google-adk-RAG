@@ -19,6 +19,7 @@ The Vertex AI RAG Agent allows you to:
 - A Google Cloud project with the Vertex AI API enabled
 - Appropriate access to create and manage Vertex AI resources
 - Python 3.9+ environment
+- Node.js and npm (for web UI)
 
 ## Setting Up Google Cloud Authentication
 
@@ -63,6 +64,72 @@ Before running the agent, you need to set up authentication with Google Cloud:
    ```bash
    pip install -r requirements.txt
    ```
+
+## Setting Up the Web UI
+
+The Google ADK web UI provides a user-friendly interface for interacting with your RAG agent.
+
+### 1. Clone the ADK Web Repository
+
+```bash
+# Clone the Google ADK web UI repository
+git clone https://github.com/google/adk-web
+
+# Install web UI dependencies
+npm install
+```
+
+### 2. Configure Environment Variables
+
+Create a `.env` file in the google-adk-rag directory with your API keys:
+
+```bash
+# In google-adk-RAG/.env
+GOOGLE_API_KEY=your_google_api_key_here
+AGENTOPS_API_KEY=your_agentops_api_key_here
+```
+
+### 3. Update the Server Configuration
+
+**Important**: Update the `agents_dir` variable in `start_adk_server.py` to point to your actual project path:
+
+```python
+# In start_adk_server.py, line 47
+"agents_dir": str("/path/to/google-adk-RAG/"),  # Update this path
+```
+
+Replace `/path/to/` with your actual file system path where the `google-adk-RAG` directory is located.
+
+## Running the Application
+
+You'll need to run both the ADK server and the web UI simultaneously.
+
+### 1. Start the ADK Server
+
+In your first terminal, navigate to the project root and start the server:
+
+```bash
+cd /path/to/google-adk-RAG
+python start_adk_server.py
+```
+
+The server will start on `http://localhost:8000`.
+
+### 2. Start the Web UI
+
+In your second terminal, navigate to the web UI directory and start it:
+
+```bash
+npm run serve --backend=http://localhost:8000
+```
+
+The web UI will be available at `http://localhost:4200`.
+
+### 3. Access the Application
+
+- Open your browser and go to `http://localhost:4200`
+- The web UI will automatically connect to the ADK server running on port 8000
+- You can now interact with your RAG agent through the web interface
 
 ## Using the Agent
 
@@ -117,6 +184,11 @@ If you encounter issues:
 
 - **Missing Dependencies**:
   - Ensure all requirements are installed: `pip install -r requirements.txt`
+
+- **Web UI Connection Issues**:
+  - Verify the ADK server is running on port 8000
+  - Check that the web UI is pointing to the correct backend URL
+  - Ensure both terminals are running the correct commands
 
 ## Additional Resources
 
