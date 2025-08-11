@@ -7,8 +7,23 @@ This script starts the ADK server with proper configuration to work with the Age
 import os
 import sys
 import subprocess
+import socket
 from pathlib import Path
 from dotenv import load_dotenv
+
+def _find_open_port(start_port: int, max_tries: int = 20) -> int:
+    """Find an available TCP port starting at start_port."""
+    port = start_port
+    for _ in range(max_tries):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                sock.bind(("127.0.0.1", port))
+                return port
+            except OSError:
+                port += 1
+    raise RuntimeError(f"No open port found in range {start_port}-{start_port + max_tries}")
+
 
 def start_adk_server():
     """Start the Google ADK API server with proper configuration"""
@@ -34,12 +49,24 @@ def start_adk_server():
         return False
     
 
+    # Determine agents directory (default to project root, allow override via env)
+    default_agents_dir = str(Path(__file__).parent.resolve())
+
+    # Determine port (allow override through env and find open port if needed)
+    desired_port = int(os.getenv("ADK_PORT", "8000"))
+    try:
+        open_port = _find_open_port(desired_port)
+    except RuntimeError:
+        print(f"❌ Could not find an open port starting at {desired_port}.")
+        return False
+
     # ADK server configuration
     server_config = {
         "host": "0.0.0.0",
-        "port": "8000", 
+        "port": str(open_port), 
         "allow_origins": "http://localhost:4200",
-        "agents_dir": str("path/to/google-adk-RAG/"),  # Point to your adk rag agent
+        # Set to absolute project path by default; override with ADK_AGENTS_DIR if provided
+        "agents_dir": os.getenv("ADK_AGENTS_DIR", default_agents_dir),
     }
     
     print(f"🔍 Agents Directory: {server_config['agents_dir']}")
@@ -60,8 +87,8 @@ def start_adk_server():
     
     print(f"\n💻 Command: {' '.join(cmd)}")
     print("\n" + "="*60)
-    print("🌐 ADK Server will be available at: http://localhost:8000")
-    print("📊 Start the web UI with: npm run serve --backend=http://localhost:8000")
+    print(f"🌐 ADK Server will be available at: http://localhost:{server_config['port']}")
+    print(f"📊 Start the web UI with: npm run serve --backend=http://localhost:{server_config['port']}")
     print("="*60)
     
     try:
